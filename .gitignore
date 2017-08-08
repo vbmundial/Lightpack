@@ -64,3 +64,6 @@ Software/lib
 *.sdf
 *.opensdf
 vc*.pdb
+/Software/Lightpack.VC.VC.opendb
+/Software/Lightpack.VC.db
+/Software/.qmake.stash
