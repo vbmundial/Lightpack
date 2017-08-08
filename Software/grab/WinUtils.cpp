@@ -364,4 +364,40 @@ VOID FreeRestrictedSD(PVOID ptr) {
     return;
 }
 
+
+
+void ApplyPrimaryGammaRamp(QList<QRgb>& colors) {
+	WORD GammaArray[3][256];
+	POINT p;
+	MONITORINFOEX monInfo;
+	p.x = 0;
+	p.y = 0;
+	monInfo.cbSize = sizeof(MONITORINFOEX);
+
+	HMONITOR mon = MonitorFromPoint(p, MONITOR_DEFAULTTOPRIMARY);
+	if (!GetMonitorInfo(mon, &monInfo)) {
+		qWarning() << Q_FUNC_INFO << "Unable to get monitor info:" << GetLastError();
+		return;
+	}
+
+	HDC dc = CreateDC(TEXT("DISPLAY"), monInfo.szDevice, NULL, NULL);
+	if (!GetDeviceGammaRamp(dc, &GammaArray)) {
+		qWarning() << Q_FUNC_INFO << "Unable to create DC:" << GetLastError();
+	} else {
+		for (QRgb& color : colors) {
+			int red = qRed(color);
+			int green = qGreen(color);
+			int blue = qBlue(color);
+
+			red = GammaArray[0][red] >> 8;
+			green = GammaArray[1][green] >> 8;
+			blue = GammaArray[2][blue] >> 8;
+
+			color = qRgb(red, green, blue);
+		}
+	}
+
+	DeleteObject(dc);
+}
+
 } // namespace WinUtils

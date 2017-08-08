@@ -498,15 +498,6 @@ void LightpackApplication::printVersionsSoftwareQtOS() const
 bool LightpackApplication::checkSystemTrayAvailability() const
 {
 #ifdef Q_OS_LINUX
-#if QT_VERSION > QT_VERSION_CHECK(5, 0, 0)
-	if (qgetenv("QT_QPA_PLATFORMTHEME") == "appmenu-qt5") {
-		// From: https://github.com/owncloud/client/pull/4747
-		// See: https://bugs.launchpad.net/ubuntu/+source/owncloud-client/+bug/1573639
-		// Qt issue: https://bugs.launchpad.net/appmenu-qt5/+bug/1574699
-		qWarning() << Q_FUNC_INFO << "Skipping TrayIcon check due to https://bugs.launchpad.net/appmenu-qt5/+bug/1574699";
-		return false;
-	}
-#else
 	{
 		// When you add lightpack in the Startup in Ubuntu (10.04), tray starts later than the application runs.
 		// Check availability tray every second for 20 seconds.
@@ -518,7 +509,6 @@ bool LightpackApplication::checkSystemTrayAvailability() const
 			QThread::sleep(1);
 		}
 	}
-#endif
 #endif
 
 	if (QSystemTrayIcon::isSystemTrayAvailable() == false)
@@ -557,6 +547,12 @@ void LightpackApplication::startApiServer()
 	connect(m_ledDeviceManager, SIGNAL(ledDeviceSetSmoothSlowdown(int)),            m_pluginInterface, SLOT(updateSmoothCache(int)),                    Qt::QueuedConnection);
 	connect(m_ledDeviceManager, SIGNAL(ledDeviceSetGamma(double)),                  m_pluginInterface, SLOT(updateGammaCache(double)),                  Qt::QueuedConnection);
 	connect(m_ledDeviceManager, SIGNAL(ledDeviceSetBrightness(int)),                m_pluginInterface, SLOT(updateBrightnessCache(int)),                Qt::QueuedConnection);
+
+#ifdef BASS_SOUND_SUPPORT
+	connect(settings(), SIGNAL(soundVisualizerMinColorChanged(QColor)), m_pluginInterface, SLOT(updateSoundVizMinColorCache(QColor)), Qt::QueuedConnection);
+	connect(settings(), SIGNAL(soundVisualizerMaxColorChanged(QColor)), m_pluginInterface, SLOT(updateSoundVizMaxColorCache(QColor)), Qt::QueuedConnection);
+	connect(settings(), SIGNAL(soundVisualizerLiquidModeChanged(bool)), m_pluginInterface, SLOT(updateSoundVizLiquidCache(bool)), Qt::QueuedConnection);
+#endif
 
 	m_apiServer->firstStart();
 
@@ -673,6 +669,7 @@ void LightpackApplication::initGrabManager()
 	connect(settings(), SIGNAL(grabSlowdownChanged(int)),                       m_grabManager,      SLOT(onGrabSlowdownChanged(int)),                       Qt::QueuedConnection);
 	connect(settings(), SIGNAL(grabAvgColorsEnabledChanged(bool)),              m_grabManager,      SLOT(onGrabAvgColorsEnabledChanged(bool)),              Qt::QueuedConnection);
 	connect(settings(), SIGNAL(grabOverBrightenChanged(int)),                   m_grabManager,      SLOT(onGrabOverBrightenChanged(int)),                   Qt::QueuedConnection);
+	connect(settings(), SIGNAL(grabApplyGammaRampChanged(bool)),                m_grabManager,      SLOT(onGrabApplyGammaRampChanged(bool)),                Qt::QueuedConnection);
 	connect(settings(), SIGNAL(sendDataOnlyIfColorsChangesChanged(bool)),       m_grabManager,      SLOT(onSendDataOnlyIfColorsEnabledChanged(bool)),       Qt::QueuedConnection);
 #ifdef D3D10_GRAB_SUPPORT
 	connect(settings(), SIGNAL(dx1011GrabberEnabledChanged(bool)),              m_grabManager,      SLOT(onDx1011GrabberEnabledChanged(bool)),              Qt::QueuedConnection);
@@ -689,6 +686,10 @@ void LightpackApplication::initGrabManager()
 	connect(settings(), SIGNAL(soundVisualizerMinColorChanged(QColor)),         m_soundManager,     SLOT(setMinColor(QColor)));
 	connect(settings(), SIGNAL(soundVisualizerLiquidSpeedChanged(int)),         m_soundManager,     SLOT(setLiquidModeSpeed(int)));
 	connect(settings(), SIGNAL(soundVisualizerLiquidModeChanged(bool)),         m_soundManager,     SLOT(setLiquidMode(bool)));
+
+	connect(m_pluginInterface, SIGNAL(updateSoundVizMinColor(QColor)), m_soundManager, SLOT(setMinColor(QColor)), Qt::QueuedConnection);
+	connect(m_pluginInterface, SIGNAL(updateSoundVizMaxColor(QColor)), m_soundManager, SLOT(setMaxColor(QColor)), Qt::QueuedConnection);
+	connect(m_pluginInterface, SIGNAL(updateSoundVizLiquid(bool)),     m_soundManager, SLOT(setLiquidMode(bool)), Qt::QueuedConnection);
 #endif
 
 	connect(settings(), SIGNAL(currentProfileInited(const QString &)),          m_grabManager,      SLOT(settingsProfileChanged(const QString &)),         Qt::QueuedConnection);

@@ -41,6 +41,9 @@
 #include "D3D10Grabber.hpp"
 #include "GrabManager.hpp"
 #include "NvfbcGrabber.hpp"
+#ifdef Q_OS_WIN
+#include "WinUtils.hpp"
+#endif
 
 using namespace SettingsScope;
 
@@ -232,10 +235,16 @@ void GrabManager::onGrabOverBrightenChanged(int value) {
 	m_overBrighten = value;
 }
 
+void GrabManager::onGrabApplyGammaRampChanged(bool state)
+{
+	DEBUG_LOW_LEVEL << Q_FUNC_INFO << state;
+	m_isApplyGammaRamp = state;
+}
+
 void GrabManager::onSendDataOnlyIfColorsEnabledChanged(bool state)
 {
-    DEBUG_LOW_LEVEL << Q_FUNC_INFO << state;
-    m_isSendDataOnlyIfColorsChanged = state;
+	DEBUG_LOW_LEVEL << Q_FUNC_INFO << state;
+	m_isSendDataOnlyIfColorsChanged = state;
 }
 
 #ifdef D3D10_GRAB_SUPPORT
@@ -279,6 +288,7 @@ void GrabManager::settingsProfileChanged(const QString &profileName)
     m_isSendDataOnlyIfColorsChanged = Settings::isSendDataOnlyIfColorsChanges();
     m_avgColorsOnAllLeds = Settings::isGrabAvgColorsEnabled();
 	m_overBrighten = Settings::getGrabOverBrighten();
+	m_isApplyGammaRamp = Settings::isGrabApplyGammaRampEnabled();
 
     setNumberOfLeds(Settings::getNumberOfLeds(Settings::getConnectedDevice()));
 }
@@ -345,6 +355,13 @@ void GrabManager::handleGrabbedColors()
 
     int avgR = 0, avgG = 0, avgB = 0;
     int countGrabEnabled = 0;
+
+#ifdef Q_OS_WIN
+	if (m_isApplyGammaRamp)
+	{
+		WinUtils::ApplyPrimaryGammaRamp(m_colorsNew);
+	}
+#endif
 
     if (m_avgColorsOnAllLeds)
     {
@@ -645,6 +662,10 @@ void GrabManager::clearColorsCurrent()
 void GrabManager::initLedWidgets(int numberOfLeds)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << numberOfLeds;
+	if (numberOfLeds == 0) {
+		qWarning() << Q_FUNC_INFO << "Grabbing 0 LEDs!";
+	}
+
 	int widgetFlags = SyncSettings | AllowCoefAndEnableConfig | AllowColorCycle;
 
     if (m_ledWidgets.size() == 0)
