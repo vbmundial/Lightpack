@@ -40,6 +40,7 @@
 #include "MacOSGrabber.hpp"
 #include "D3D10Grabber.hpp"
 #include "GrabManager.hpp"
+#include "NvfbcGrabber.hpp"
 
 using namespace SettingsScope;
 
@@ -550,6 +551,9 @@ void GrabManager::initGrabbers()
     } else {
         m_d3d10Grabber = NULL;
     }
+#endif
+#ifdef NVFBC_GRAB_SUPPORT
+    m_grabbers[Grab::GrabberTypeNvfbc] = initGrabber(new NvfbcGrabber(NULL, m_grabberContext));
 #endif
 }
 

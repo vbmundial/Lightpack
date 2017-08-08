@@ -62,6 +62,13 @@ win32 {
         GRABBERS_HEADERS += include/D3D10Grabber.hpp
         GRABBERS_SOURCES += D3D10Grabber.cpp
     }
+
+    contains(DEFINES, NVFBC_GRAB_SUPPORT) {
+        GRABBERS_HEADERS += include/NvfbcGrabber.hpp
+        GRABBERS_SOURCES += NvfbcGrabber.cpp
+        INCLUDEPATH +=  $$(CAPTURESDK_PATH)/inc \
+                        $$(CAPTURESDK_PATH)/samples/util 
+    }
 }
 
 HEADERS += \

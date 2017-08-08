@@ -2411,6 +2411,13 @@
                 </widget>
                </item>
                <item>
+                <widget class="QRadioButton" name="radioButton_GrabNvfbc">
+                 <property name="text">
+                  <string notr="true">NVFBC</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
                 <spacer name="verticalSpacer">
                  <property name="orientation">
                   <enum>Qt::Vertical</enum>
