@@ -410,12 +410,12 @@ void GrabManager::handleGrabbedColors()
         }
     }
 
-    if ((m_isSendDataOnlyIfColorsChanged == false) || isColorsChanged)
+    m_fpsMs = m_timeEval->howLongItEnd();
+    if ((m_isSendDataOnlyIfColorsChanged == false || isColorsChanged) && m_fpsMs >= 10)
     {
         emit updateLedsColors(m_colorsCurrent);
     }
 
-    m_fpsMs = m_timeEval->howLongItEnd();
     m_noGrabCount = 0;
     m_timeEval->howLongItStart();
 
